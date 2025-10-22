@@ -48,22 +48,36 @@ export default function NestedSuspenseDemo() {
       <h2 className="text-xl font-bold">중첩된 Suspense 예시</h2>
 
       {/* 최상위 Suspense */}
-      <Suspense fallback={<div className="p-4 bg-blue-100">🔄 사용자 데이터 로딩 중...</div>}>
+      <Suspense
+        fallback={
+          <div className="p-4 bg-blue-100">🔄 사용자 데이터 로딩 중...</div>
+        }
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* 첫 번째 사용자 */}
           <div className="border p-4">
             <h3 className="font-bold">사용자 1</h3>
 
             {/* 중첩된 Suspense들 */}
-            <Suspense fallback={<div className="p-2 bg-green-100">🔄 프로필 로딩...</div>}>
+            <Suspense
+              fallback={
+                <div className="p-2 bg-green-100">🔄 프로필 로딩...</div>
+              }
+            >
               <UserProfile userId="1" />
             </Suspense>
 
-            <Suspense fallback={<div className="p-2 bg-yellow-100">🔄 게시글 로딩...</div>}>
+            <Suspense
+              fallback={
+                <div className="p-2 bg-yellow-100">🔄 게시글 로딩...</div>
+              }
+            >
               <UserPosts userId="1" />
             </Suspense>
 
-            <Suspense fallback={<div className="p-2 bg-red-100">🔄 댓글 로딩...</div>}>
+            <Suspense
+              fallback={<div className="p-2 bg-red-100">🔄 댓글 로딩...</div>}
+            >
               <UserComments userId="1" />
             </Suspense>
           </div>
@@ -72,15 +86,25 @@ export default function NestedSuspenseDemo() {
           <div className="border p-4">
             <h3 className="font-bold">사용자 2</h3>
 
-            <Suspense fallback={<div className="p-2 bg-green-100">🔄 프로필 로딩...</div>}>
+            <Suspense
+              fallback={
+                <div className="p-2 bg-green-100">🔄 프로필 로딩...</div>
+              }
+            >
               <UserProfile userId="2" />
             </Suspense>
 
-            <Suspense fallback={<div className="p-2 bg-yellow-100">🔄 게시글 로딩...</div>}>
+            <Suspense
+              fallback={
+                <div className="p-2 bg-yellow-100">🔄 게시글 로딩...</div>
+              }
+            >
               <UserPosts userId="2" />
             </Suspense>
 
-            <Suspense fallback={<div className="p-2 bg-red-100">🔄 댓글 로딩...</div>}>
+            <Suspense
+              fallback={<div className="p-2 bg-red-100">🔄 댓글 로딩...</div>}
+            >
               <UserComments userId="2" />
             </Suspense>
           </div>
