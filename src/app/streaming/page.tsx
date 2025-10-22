@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import UserList from "../components/UserList";
-import Loading from "../components/Loading";
+import UserList from "@/components/UserList";
+import Loading from "@/components/Loading";
 
 export default function Page() {
   return (
@@ -16,3 +16,5 @@ export default function Page() {
     </main>
   );
 }
+
+// 데이터 패칭이 완료되기 전까지는 fallback 이 표시되고, 완료되면 데이터가 표시됨
