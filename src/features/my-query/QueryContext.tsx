@@ -84,10 +84,16 @@ export const useMyQuery = <T extends QueryData>(_queryOption: QueryOptions) => {
 
   useEffect(() => {
     handleQuery();
-    window.addEventListener("focus", handleQuery);
+
+    if (queryOptionRef.current.refetchOnWindowFocus) {
+      window.addEventListener("focus", handleQuery);
+    }
 
     return () => {
-      window.removeEventListener("focus", handleQuery);
+      if (queryOptionRef.current.refetchOnWindowFocus) {
+        window.removeEventListener("focus", handleQuery);
+      }
+
       if (isExpiredGcTime(queryOptionRef.current.queryKey)) {
         removeQuery(queryOptionRef.current.queryKey);
       }

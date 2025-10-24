@@ -7,6 +7,7 @@ export type QueryOptions = {
   onError?: (error: Error) => void;
   staleTime?: number;
   gcTime?: number;
+  refetchOnWindowFocus?: boolean;
 };
 
 export type QueryCache = {
