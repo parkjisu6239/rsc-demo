@@ -1,26 +1,26 @@
-export type QueryOptions = {
+export type QueryOptions<T> = {
   queryKey: string;
-  queryFn: () => Promise<any>;
+  queryFn: () => Promise<T>;
   staleTime?: number;
   gcTime?: number;
 };
 
-export type QueryCache = {
+export type QueryCache<T> = {
   queryKey: string;
   modifiedAt: number;
-  data: any;
+  data: T;
 };
 
 class MyQueryClient {
-  private querys: Record<string, Required<QueryOptions>> = {};
-  private queryCache: Record<string, QueryCache> = {};
+  private querys: Record<string, Required<QueryOptions<object>>> = {};
+  private queryCache: Record<string, QueryCache<object>> = {};
 
   constructor() {
     this.querys = {};
     this.queryCache = {};
   }
 
-  addQuery = (query: QueryOptions) => {
+  addQuery = <T extends object>(query: QueryOptions<T>) => {
     this.querys[query.queryKey] = {
       ...query,
       staleTime: query.staleTime || 1000 * 60,
@@ -28,7 +28,7 @@ class MyQueryClient {
     };
   };
 
-  updateQuery = (queryKey: string, data: any) => {
+  updateQuery = <T extends object>(queryKey: string, data: T) => {
     // 클라이언트 사이드에서만 시간 기록
     const modifiedAt = typeof window !== "undefined" ? Date.now() : 0;
     this.queryCache[queryKey] = { queryKey, modifiedAt, data };

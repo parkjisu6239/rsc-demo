@@ -9,9 +9,12 @@ function UserDetail({ userId }: { userId: string }) {
     gcTime: 1000 * 60 * 10,
   });
 
-  if (isLoading) return <div>Loading UserDetail...</div>;
-
-  return <div>UserDetail {data?.name}</div>;
+  return (
+    <div>
+      {isLoading && <div>Loading UserDetail...</div>}
+      {!isLoading && <div>UserDetail {data?.name}</div>}
+    </div>
+  );
 }
 
 export default UserDetail;

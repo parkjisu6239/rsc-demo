@@ -7,23 +7,24 @@ import { useMyQuery } from "@/features/my-query/QueryContext";
 const userQueryOption = {
   queryKey: "users",
   queryFn: () => getUsers(),
-  staleTime: 1000 * 60 * 5,
+  staleTime: 1000 * 5,
   gcTime: 1000 * 60 * 10,
 };
 
 function UserContent() {
   const { isLoading, data } = useMyQuery(userQueryOption);
 
-  if (isLoading) return <div>Loading User...</div>;
-
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">User List</h2>
-      <div className="space-y-2">
-        {data?.map((user: { id: string; name: string; email: string }) => (
-          <div key={user.id}>{user.name}</div>
-        ))}
-      </div>
+      {isLoading && <div>Loading User...</div>}
+      {!isLoading && (
+        <div className="space-y-2">
+          {data?.map((user: { id: string; name: string; email: string }) => (
+            <div key={user.id}>{user.name}</div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
