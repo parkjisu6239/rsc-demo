@@ -84,3 +84,7 @@ export default instance;
 // gcTime 이전, staleTime 이후 -> 새로운 값을 캐싱하고, 캐싱된 값을 반환한다.
 // gcTime 이후 -> 캐싱된 값을 제거하고, 새로요 요청을 한다.
 // 캐싱된 값이 없으면 새로 요청하고, 그 값을 캐싱한다.
+
+export const invalidateQueries = (queryKey: string) => {
+  instance.removeQuery(queryKey);
+};
