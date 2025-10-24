@@ -8,6 +8,7 @@ export type QueryOptions = {
   staleTime?: number;
   gcTime?: number;
   refetchOnWindowFocus?: boolean;
+  retry?: number;
 };
 
 export type QueryCache = {

@@ -83,15 +83,25 @@ export const useMyQuery = <T extends QueryData>(_queryOption: QueryOptions) => {
   }, [getQueryCache, isStale, isExpiredGcTime, addQuery, handleFetch]);
 
   useEffect(() => {
+    let retryTimer: NodeJS.Timeout | null = null;
+
     handleQuery();
 
     if (queryOptionRef.current.refetchOnWindowFocus) {
       window.addEventListener("focus", handleQuery);
     }
 
+    if (queryOptionRef.current.retry) {
+      retryTimer = setInterval(handleQuery, queryOptionRef.current.retry);
+    }
+
     return () => {
       if (queryOptionRef.current.refetchOnWindowFocus) {
         window.removeEventListener("focus", handleQuery);
+      }
+
+      if (queryOptionRef.current.retry && retryTimer) {
+        clearInterval(retryTimer);
       }
 
       if (isExpiredGcTime(queryOptionRef.current.queryKey)) {
