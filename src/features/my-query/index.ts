@@ -17,47 +17,56 @@ class MyQueryClient {
 
   constructor() {
     this.querys = {};
+    this.queryCache = {};
   }
 
-  addQuery(query: QueryOptions) {
+  addQuery = (query: QueryOptions) => {
     this.querys[query.queryKey] = {
       ...query,
       staleTime: query.staleTime || 1000 * 60,
       gcTime: query.gcTime || 1000 * 60,
     };
-  }
+  };
 
-  updateQuery(queryKey: string, data: any) {
-    this.queryCache[queryKey] = { queryKey, modifiedAt: Date.now(), data };
-  }
+  updateQuery = (queryKey: string, data: any) => {
+    // 클라이언트 사이드에서만 시간 기록
+    const modifiedAt = typeof window !== "undefined" ? Date.now() : 0;
+    this.queryCache[queryKey] = { queryKey, modifiedAt, data };
+  };
 
-  getQueryCache(queryKey: string) {
+  getQueryCache = (queryKey: string) => {
     return this.queryCache[queryKey];
-  }
+  };
 
-  isStale(queryKey: string) {
+  isStale = (queryKey: string) => {
+    // 클라이언트 사이드에서만 stale 체크
+    if (typeof window === "undefined") return false;
+
     const query = this.querys[queryKey];
     const queryCache = this.queryCache[queryKey];
-    if (!query) return false;
+    if (!query || !queryCache) return false;
     return Date.now() - queryCache.modifiedAt > query.staleTime;
-  }
+  };
 
-  isExpiredGcTime(queryKey: string) {
+  isExpiredGcTime = (queryKey: string) => {
+    // 클라이언트 사이드에서만 gcTime 체크
+    if (typeof window === "undefined") return false;
+
     const query = this.querys[queryKey];
     const queryCache = this.queryCache[queryKey];
-    if (!query) return false;
+    if (!query || !queryCache) return false;
     return Date.now() - queryCache.modifiedAt > query.gcTime;
-  }
+  };
 
-  removeQuery(queryKey: string) {
+  removeQuery = (queryKey: string) => {
     delete this.querys[queryKey];
     delete this.queryCache[queryKey];
-  }
+  };
 
-  clearQueries() {
+  clearQueries = () => {
     this.querys = {};
     this.queryCache = {};
-  }
+  };
 }
 
 const instance = new MyQueryClient();
