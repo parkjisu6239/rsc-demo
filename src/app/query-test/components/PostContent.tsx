@@ -4,7 +4,9 @@ import { getPosts } from "@/api";
 import { useMyQuery } from "@/features/my-query/QueryContext";
 
 function PostContent() {
-  const { isLoading, data, refetch } = useMyQuery({
+  const { isLoading, data, refetch } = useMyQuery<
+    { id: string; title: string; body: string }[]
+  >({
     queryKey: "posts",
     queryFn: () => getPosts(),
     staleTime: 1000 * 60 * 5,

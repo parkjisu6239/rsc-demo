@@ -12,7 +12,8 @@ const userQueryOption = {
 };
 
 function UserContent() {
-  const { isLoading, data } = useMyQuery(userQueryOption);
+  const { isLoading, data } =
+    useMyQuery<{ id: string; name: string; email: string }[]>(userQueryOption);
 
   return (
     <div>

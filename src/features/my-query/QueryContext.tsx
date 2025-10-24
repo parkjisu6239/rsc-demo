@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import instance, { MyQueryClient, QueryOptions } from "./index";
+import instance, { MyQueryClient, QueryData, QueryOptions } from "./index";
 
 export const QueryContext = createContext<MyQueryClient>({} as MyQueryClient);
 
@@ -25,7 +25,7 @@ export const QueryContextProvider = ({
   );
 };
 
-export const useMyQuery = <T extends object>(_queryOption: QueryOptions<T>) => {
+export const useMyQuery = <T extends QueryData>(_queryOption: QueryOptions) => {
   const {
     addQuery,
     getQueryCache,
@@ -40,14 +40,21 @@ export const useMyQuery = <T extends object>(_queryOption: QueryOptions<T>) => {
   const isFetchingRef = useRef(false);
   const queryOptionRef = useRef(_queryOption);
 
-  const refetch = useCallback(async () => {
-    isFetchingRef.current = true;
-    setIsLoading(true);
-    const data = await queryOptionRef.current.queryFn();
-    updateQuery(queryOptionRef.current.queryKey, data);
-    setData(data);
-    setIsLoading(false);
-    isFetchingRef.current = false;
+  const handleFetch = useCallback(async () => {
+    const queryOption = queryOptionRef.current;
+    try {
+      isFetchingRef.current = true;
+      setIsLoading(true);
+      const data = await queryOption.queryFn();
+      updateQuery(queryOption.queryKey, data);
+      setData(data as T);
+      queryOption.onSuccess?.(data);
+    } catch (error) {
+      queryOption.onError?.(error as Error);
+    } finally {
+      isFetchingRef.current = false;
+      setIsLoading(false);
+    }
   }, [updateQuery]);
 
   useEffect(() => {
@@ -58,7 +65,7 @@ export const useMyQuery = <T extends object>(_queryOption: QueryOptions<T>) => {
     if (!queryCache) {
       console.log("쿼리가 없음");
       addQuery(queryOptionRef.current);
-      refetch();
+      handleFetch();
       return;
     }
 
@@ -67,7 +74,7 @@ export const useMyQuery = <T extends object>(_queryOption: QueryOptions<T>) => {
       isExpiredGcTime(queryOptionRef.current.queryKey)
     ) {
       console.log("쿼리가 만료됨");
-      refetch();
+      handleFetch();
       return;
     }
 
@@ -80,7 +87,14 @@ export const useMyQuery = <T extends object>(_queryOption: QueryOptions<T>) => {
         removeQuery(queryOptionRef.current.queryKey);
       }
     };
-  }, [addQuery, refetch, getQueryCache, isExpiredGcTime, isStale, removeQuery]);
+  }, [
+    addQuery,
+    handleFetch,
+    getQueryCache,
+    isExpiredGcTime,
+    isStale,
+    removeQuery,
+  ]);
 
-  return { isLoading, data, refetch };
+  return { isLoading, data, refetch: handleFetch };
 };
