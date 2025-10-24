@@ -41,23 +41,22 @@ export const useMyQuery = <T extends QueryData>(_queryOption: QueryOptions) => {
   const queryOptionRef = useRef(_queryOption);
 
   const handleFetch = useCallback(async () => {
-    const queryOption = queryOptionRef.current;
     try {
       isFetchingRef.current = true;
       setIsLoading(true);
-      const data = await queryOption.queryFn();
-      updateQuery(queryOption.queryKey, data);
+      const data = await queryOptionRef.current.queryFn();
+      updateQuery(queryOptionRef.current.queryKey, data);
       setData(data as T);
-      queryOption.onSuccess?.(data);
+      queryOptionRef.current.onSuccess?.(data);
     } catch (error) {
-      queryOption.onError?.(error as Error);
+      queryOptionRef.current.onError?.(error as Error);
     } finally {
       isFetchingRef.current = false;
       setIsLoading(false);
     }
   }, [updateQuery]);
 
-  useEffect(() => {
+  const handleQuery = useCallback(async () => {
     if (isFetchingRef.current) return;
 
     const queryCache = getQueryCache(queryOptionRef.current.queryKey);
@@ -81,20 +80,19 @@ export const useMyQuery = <T extends QueryData>(_queryOption: QueryOptions) => {
     console.log("쿼리가 유효함");
     setIsLoading(false);
     setData(queryCache.data as T);
+  }, [getQueryCache, isStale, isExpiredGcTime, addQuery, handleFetch]);
+
+  useEffect(() => {
+    handleQuery();
+    window.addEventListener("focus", handleQuery);
 
     return () => {
+      window.removeEventListener("focus", handleQuery);
       if (isExpiredGcTime(queryOptionRef.current.queryKey)) {
         removeQuery(queryOptionRef.current.queryKey);
       }
     };
-  }, [
-    addQuery,
-    handleFetch,
-    getQueryCache,
-    isExpiredGcTime,
-    isStale,
-    removeQuery,
-  ]);
+  }, [isExpiredGcTime, removeQuery, handleQuery, queryOptionRef]);
 
   return { isLoading, data, refetch: handleFetch };
 };
