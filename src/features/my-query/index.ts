@@ -32,8 +32,8 @@ class MyQueryClient {
   addQuery = (query: QueryOptions) => {
     this.querys[query.queryKey] = {
       ...query,
-      staleTime: query.staleTime || 1000 * 60,
-      gcTime: query.gcTime || 1000 * 60,
+      staleTime: query.staleTime ?? 1000 * 60,
+      gcTime: query.gcTime ?? 1000 * 60,
     };
   };
 
