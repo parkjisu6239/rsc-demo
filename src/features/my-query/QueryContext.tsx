@@ -40,9 +40,32 @@ export const useMyQuery = <T extends QueryData>(_queryOption: QueryOptions) => {
   const isFetchingRef = useRef(false);
   const queryOptionRef = useRef(_queryOption);
 
+  const dispatchFetchingStartEvent = useCallback(() => {
+    const fetchingEvent = new CustomEvent("myquery-fetching-start", {
+      detail: {
+        queryKey: queryOptionRef.current.queryKey,
+      },
+      bubbles: true,
+      cancelable: false,
+    });
+    window.dispatchEvent(fetchingEvent);
+  }, []);
+
+  const dispatchFetchingEndEvent = useCallback(() => {
+    const fetchingEvent = new CustomEvent("myquery-fetching-end", {
+      detail: {
+        queryKey: queryOptionRef.current.queryKey,
+      },
+      bubbles: true,
+      cancelable: false,
+    });
+    window.dispatchEvent(fetchingEvent);
+  }, []);
+
   const handleFetch = useCallback(async () => {
     try {
       isFetchingRef.current = true;
+      dispatchFetchingStartEvent();
       setIsLoading(true);
       const data = await queryOptionRef.current.queryFn();
       updateQuery(queryOptionRef.current.queryKey, data);
@@ -53,8 +76,9 @@ export const useMyQuery = <T extends QueryData>(_queryOption: QueryOptions) => {
     } finally {
       isFetchingRef.current = false;
       setIsLoading(false);
+      dispatchFetchingEndEvent();
     }
-  }, [updateQuery]);
+  }, [updateQuery, dispatchFetchingStartEvent, dispatchFetchingEndEvent]);
 
   const handleQuery = useCallback(async () => {
     if (isFetchingRef.current) return;

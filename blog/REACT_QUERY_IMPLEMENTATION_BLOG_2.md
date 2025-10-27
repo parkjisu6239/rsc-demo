@@ -330,66 +330,153 @@ useEffect(() => {
 
 ---
 
-## Next Steps: Mutation과 옵티미스틱 업데이트
+## 추가된 고급 기능들
 
-### 1. Mutation 시스템
-
-```typescript
-// 다음 시리즈에서 구현할 기능
-export type MutationOptions<TData, TVariables> = {
-  mutationFn: (variables: TVariables) => Promise<TData>;
-  onSuccess?: (data: TData, variables: TVariables) => void;
-  onError?: (error: Error, variables: TVariables) => void;
-  onSettled?: (
-    data: TData | undefined,
-    error: Error | null,
-    variables: TVariables
-  ) => void;
-};
-
-export const useMyMutation = <TData, TVariables>(
-  options: MutationOptions<TData, TVariables>
-) => {
-  // mutation 로직 구현
-};
-```
-
-### 2. 옵티미스틱 업데이트
+### 1. 전역 페칭 상태 관리 (useIsFetching)
 
 ```typescript
-// 낙관적 업데이트를 위한 기능
-export type OptimisticUpdateOptions<TData, TVariables> = {
-  mutationFn: (variables: TVariables) => Promise<TData>;
-  optimisticUpdate: (variables: TVariables) => TData;
-  rollbackOnError?: boolean;
-};
+// useIsFetching.tsx
+interface UseIsFetchingProps {
+  queryKeys?: string[];
+  predicate?: (queryKey: string) => boolean;
+}
+
+function useIsFetching({ queryKeys, predicate }: UseIsFetchingProps = {}) {
+  const [isFetching, setIsFetching] = useState(false);
+
+  useEffect(() => {
+    const handleFetchingStart = (event: CustomEvent) => {
+      if (queryKeys && !queryKeys.includes(event.detail.queryKey)) return;
+      if (predicate && !predicate(event.detail.queryKey)) return;
+      setIsFetching(true);
+    };
+
+    const handleFetchingEnd = (event: CustomEvent) => {
+      if (queryKeys && !queryKeys.includes(event.detail.queryKey)) return;
+      if (predicate && !predicate(event.detail.queryKey)) return;
+      setIsFetching(false);
+    };
+
+    window.addEventListener("myquery-fetching-start", handleFetchingStart);
+    window.addEventListener("myquery-fetching-end", handleFetchingEnd);
+
+    return () => {
+      window.removeEventListener("myquery-fetching-start", handleFetchingStart);
+      window.removeEventListener("myquery-fetching-end", handleFetchingEnd);
+    };
+  }, [queryKeys, predicate]);
+
+  return isFetching;
+}
 ```
 
-### 3. 쿼리 의존성 관리
+### 2. 커스텀 이벤트 시스템
 
 ```typescript
-// 쿼리 간 의존성 설정
-export type QueryDependency = {
-  queryKey: string;
-  condition: (data: any) => boolean;
-};
+// QueryContext.tsx에서 구현
+const dispatchFetchingStartEvent = useCallback(() => {
+  const fetchingEvent = new CustomEvent("myquery-fetching-start", {
+    detail: { queryKey: queryOptionRef.current.queryKey },
+    bubbles: true,
+    cancelable: false,
+  });
+  window.dispatchEvent(fetchingEvent);
+}, []);
 
-export type QueryOptions = {
-  // ... 기존 옵션들
-  dependencies?: QueryDependency[];
-};
+const dispatchFetchingEndEvent = useCallback(() => {
+  const fetchingEvent = new CustomEvent("myquery-fetching-end", {
+    detail: { queryKey: queryOptionRef.current.queryKey },
+    bubbles: true,
+    cancelable: false,
+  });
+  window.dispatchEvent(fetchingEvent);
+}, []);
 ```
 
-### 4. 백그라운드 동기화
+### 3. 개선된 상태 관리
 
 ```typescript
-// 백그라운드에서 자동으로 데이터 동기화
-export type BackgroundSyncOptions = {
-  interval?: number;
-  onWindowFocus?: boolean;
-  onNetworkReconnect?: boolean;
-};
+// useRef를 활용한 최적화
+const isFetchingRef = useRef(false);
+const queryOptionRef = useRef(_queryOption);
+
+// 중복 요청 방지
+if (isFetchingRef.current) return;
+isFetchingRef.current = true;
 ```
+
+### 4. 테스트 페이지 개선
+
+```typescript
+// query-test/page.tsx
+export default function QueryTestPage() {
+  const isFetching = useIsFetching();
+
+  return (
+    <div className="p-8">
+      <h1 className="text-3xl font-bold mb-6">
+        My Query 테스트 {isFetching && "🔄"}
+      </h1>
+      {/* ... 나머지 UI */}
+    </div>
+  );
+}
+```
+
+**개선점:**
+
+- ✅ **전역 상태 추적**: 모든 쿼리의 페칭 상태를 한 곳에서 관리
+- ✅ **커스텀 이벤트**: 브라우저 네이티브 이벤트 시스템 활용
+- ✅ **중복 요청 방지**: useRef를 활용한 효율적인 상태 관리
+- ✅ **사용자 경험**: 로딩 상태를 시각적으로 표시
+
+---
+
+## Next Steps: React Query 실제 구현체 분석
+
+### 1. 공식 React Query 소스코드 분석
+
+```typescript
+// @tanstack/react-query 소스코드 분석
+// - QueryClient 내부 구조
+// - Query와 Mutation의 차이점
+// - 캐싱 전략과 메모리 관리
+// - 에러 처리와 재시도 로직
+```
+
+### 2. 핵심 개념 이해
+
+- **Query vs Mutation**: 언제 어떤 것을 사용해야 하는가?
+- **Stale vs Fresh**: 데이터 상태 관리의 핵심
+- **Background Refetching**: 언제 자동으로 갱신하는가?
+- **Garbage Collection**: 메모리 관리 전략
+
+### 3. 성능 최적화 기법
+
+```typescript
+// React Query의 최적화 기법들
+// - Virtual Scrolling과의 연동
+// - Infinite Query 구현
+// - Parallel Queries 처리
+// - Dependent Queries 관리
+```
+
+### 4. 실제 프로덕션 코드 분석
+
+```typescript
+// 대규모 애플리케이션에서의 React Query 사용 패턴
+// - 상태 관리와의 통합
+// - 에러 바운더리와의 연동
+// - SSR/SSG와의 호환성
+// - 디버깅 도구 활용
+```
+
+### 5. 우리 구현체와의 비교
+
+- **성능 차이**: 실제 벤치마크 비교
+- **기능 차이**: 누락된 기능들 파악
+- **API 차이**: 사용자 경험 비교
+- **개선 방향**: 다음 단계 로드맵 수립
 
 ---
 
@@ -413,7 +500,7 @@ export type BackgroundSyncOptions = {
 
 ### 다음 단계
 
-3편에서는 **Mutation 시스템**과 **옵티미스틱 업데이트**를 구현하여 완전한 상태 관리 라이브러리로 완성할 예정입니다. 이를 통해 서버 상태와 클라이언트 상태를 통합적으로 관리할 수 있는 강력한 도구를 만들어보겠습니다.
+3편에서는 **React Query 공식 구현체를 직접 분석**하여 우리가 만든 라이브러리와 비교해보겠습니다. 공식 소스코드를 뜯어보면서 놓친 기능들과 개선할 점들을 발견하고, 더욱 견고하고 성능이 뛰어난 라이브러리로 발전시켜 나가겠습니다.
 
 ---
 
